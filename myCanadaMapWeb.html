@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canada Provinces Map</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #viewDiv {
+            height: 100%;
+            width: calc(100% - 200px); /* Restar el espacio para los botones de las provincias */
+            position: relative; /* Posición relativa para permitir el posicionamiento absoluto de los botones */
+            float: right;
+        }
+        #provinceButtons {
+            width: 200px;
+            height: 100%; /* Igualar altura al mapa */
+            float: left;
+            background-color: #f0f0f0;
+            overflow-y: auto; /* Permitir desplazamiento vertical si hay más botones */
+            margin: 0; /* Eliminar margen */
+            padding: 0; /* Eliminar relleno */
+        }
+        #provinceTitle {
+            text-align: center;
+            padding: 10px 0;
+            margin: 0;
+            background-color: #0079c1;
+            color: white;
+            font-size: 18px;
+        }
+        #homeButton {
+            width: 100%;
+            padding: 10px;
+            background-color: #0079c1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #homeButton:hover {
+            background-color: #005682;
+        }
+        #provinceButtons button {
+            display: block;
+            margin: 10px;
+            width: calc(100% - 20px);
+            padding: 5px;
+            background-color: #0079c1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .esri-basemap-gallery__panel {
+            max-height: 200px; /* Altura máxima del contenedor de basemaps */
+            overflow-y: auto; /* Permitir desplazamiento vertical si hay más basemaps */
+        }
+    </style>
+</head>
+<body>
+    <div id="provinceButtons">
+        <h2 id="provinceTitle">Provinces</h2>
+        <!-- Province buttons -->
+        <button onclick="zoomToProvince('Alberta')">Alberta</button>
+        <button onclick="zoomToProvince('British Columbia')">British Columbia</button>
+        <button onclick="zoomToProvince('Manitoba')">Manitoba</button>
+        <button onclick="zoomToProvince('New Brunswick')">New Brunswick</button>
+        <button onclick="zoomToProvince('Newfoundland and Labrador')">Newfoundland and Labrador</button>
+        <button onclick="zoomToProvince('Northwest Territories')">Northwest Territories</button>
+        <button onclick="zoomToProvince('Nova Scotia')">Nova Scotia</button>
+        <button onclick="zoomToProvince('Nunavut')">Nunavut</button>
+        <button onclick="zoomToProvince('Ontario')">Ontario</button>
+        <button onclick="zoomToProvince('Prince Edward Island')">Prince Edward Island</button>
+        <button onclick="zoomToProvince('Quebec')">Quebec</button>
+        <button onclick="zoomToProvince('Saskatchewan')">Saskatchewan</button>
+        <button onclick="zoomToProvince('Yukon')">Yukon</button>
+        <button id="homeButton" onclick="zoomToCanada()">Home</button>
+    </div>
+    <div id="viewDiv"></div>
+
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/MapImageLayer",
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/BasemapGallery/support/PortalBasemapsSource",
+            "esri/geometry/Extent",
+            "esri/geometry/SpatialReference"
+        ], function(Map, MapView, MapImageLayer, BasemapGallery, PortalBasemapsSource, Extent, SpatialReference) {
+
+            var map = new Map({
+                basemap: "topo"
+            });
+
+            var view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [-106, 60],
+                zoom: 3
+            });
+
+            var basemapGallery = new BasemapGallery({
+                view: view,
+                container: document.createElement("div"),
+                source: new PortalBasemapsSource({
+                    portal: {
+                        url: "https://www.arcgis.com",
+                        useVectorBasemaps: true
+                    }
+                })
+            });
+
+            view.ui.add(basemapGallery, "top-right");
+
+            // Agregamos una nueva capa de ArcGIS
+            var provincesLayer = new MapImageLayer({
+                url: "https://geom99web.duckdns.org/arcgis/rest/services/MyCanada/MyCanada/MapServer"
+            });
+
+            map.add(provincesLayer); // Agregamos la capa al mapa
+
+            window.zoomToProvince = function(province) {
+                // Define extent for each province
+                var extents = {
+                    "Alberta": [-121.75, 48.99, -110.00, 60.00],
+                    "British Columbia": [-139.06, 48.30, -114.01, 60.00],
+                    "Manitoba": [-102.23, 49.00, -88.60, 60.00],
+                    "New Brunswick": [-68.65, 44.58, -63.44, 48.06],
+                    "Newfoundland and Labrador": [-67.73, 46.60, -52.57, 61.00],
+                    "Northwest Territories": [-141.00, 60.00, -100.00, 69.90],
+                    "Nova Scotia": [-67.09, 43.48, -58.54, 47.06],
+                    "Nunavut": [-121.00, 59.50, -70.00, 80.00],
+                    "Ontario": [-95.16, 41.68, -74.45, 56.85],
+                    "Prince Edward Island": [-64.38, 45.91, -61.78, 47.08],
+                    "Quebec": [-79.77, 44.99, -57.10, 62.00],
+                    "Saskatchewan": [-110.00, 48.99, -101.40, 60.00],
+                    "Yukon": [-141.00, 59.99, -126.98, 69.99]
+                };
+
+                // Set extent for the selected province
+                var extent = new Extent({
+                    xmin: extents[province][0],
+                    ymin: extents[province][1],
+                    xmax: extents[province][2],
+                    ymax: extents[province][3],
+                    spatialReference: new SpatialReference({ wkid: 4326 }) // WGS 1984 Web Mercator (Auxiliary Sphere)
+                });
+
+                // Zoom to the extent of the selected province
+                view.goTo(extent);
+            };
+
+            window.zoomToCanada = function() {
+                // Zoom back to the initial extent of Canada
+                view.goTo({
+                    center: [-106, 60],
+                    zoom: 3
+                });
+            };
+        });
+    </script>
+</body>
+</html>
