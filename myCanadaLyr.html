@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canada Provinces Map</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #viewDiv {
+            height: 100%;
+            width: 100%;
+        }
+        #provinceButtons {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        }
+        #provinceButtons button {
+            display: block;
+            margin-bottom: 5px;
+            width: 100%;
+            padding: 5px;
+            background-color: #0079c1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="provinceButtons">
+        <h2>Provinces</h2>
+        <!-- Province buttons -->
+        <button onclick="zoomToProvince('Alberta')">Alberta</button>
+        <button onclick="zoomToProvince('British Columbia')">British Columbia</button>
+        <button onclick="zoomToProvince('Manitoba')">Manitoba</button>
+        <button onclick="zoomToProvince('New Brunswick')">New Brunswick</button>
+        <button onclick="zoomToProvince('Newfoundland and Labrador')">Newfoundland and Labrador</button>
+        <button onclick="zoomToProvince('Northwest Territories')">Northwest Territories</button>
+        <button onclick="zoomToProvince('Nova Scotia')">Nova Scotia</button>
+        <button onclick="zoomToProvince('Nunavut')">Nunavut</button>
+        <button onclick="zoomToProvince('Ontario')">Ontario</button>
+        <button onclick="zoomToProvince('Prince Edward Island')">Prince Edward Island</button>
+        <button onclick="zoomToProvince('Quebec')">Quebec</button>
+        <button onclick="zoomToProvince('Saskatchewan')">Saskatchewan</button>
+        <button onclick="zoomToProvince('Yukon')">Yukon</button>
+        <button onclick="zoomToCanada()">Zoom to Canada</button>
+    </div>
+    <div id="viewDiv"></div>
+
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/BasemapToggle",
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/Search"
+        ], function(Map, MapView, FeatureLayer, BasemapToggle, BasemapGallery, Search) {
+
+            var map = new Map({
+                basemap: "satellite" // Basemap inicial
+            });
+
+            var view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [-95, 65], // Centrado en Canadá
+                zoom: 3 // Zoom inicial
+            });
+
+            // Capa de servicio de entidades para mostrar las provincias de Canadá
+            var provincesLayer = new FeatureLayer({
+                url: "https://services1.arcgis.com/pMeXRvgWClLJZr3s/ArcGIS/rest/services/MyCanada/FeatureServer/0"
+            });
+
+            map.add(provincesLayer); // Agregar la capa al mapa
+
+            // Función para acercarse a una provincia específica
+            window.zoomToProvince = function(provinceName) {
+                var query = provincesLayer.createQuery();
+                query.where = "NAME = '" + provinceName + "'";
+                provincesLayer.queryExtent(query).then(function(response) {
+                    view.goTo(response.extent);
+                });
+            };
+
+            // Función para acercarse a Canadá
+            window.zoomToCanada = function() {
+                view.goTo({
+                    center: [-95, 65],
+                    zoom: 3
+                });
+            };
+
+            // BasemapToggle para cambiar entre basemaps
+            var basemapToggle = new BasemapToggle({
+                view: view,
+                nextBasemap: "streets-vector" // Siguiente basemap
+            });
+
+            // Agregar el BasemapToggle al mapa
+            view.ui.add(basemapToggle, "bottom-right");
+
+            // BasemapGallery para cambiar entre basemaps
+            var basemapGallery = new BasemapGallery({
+                view: view,
+                container: document.createElement("div"),
+                source: {
+                    portal: {
+                        url: "https://www.arcgis.com",
+                        useVectorBasemaps: true
+                    }
+                }
+            });
+
+            // Agregar BasemapGallery al mapa
+            view.ui.add(basemapGallery, "bottom-right");
+
+            // Widget de búsqueda
+            var searchWidget = new Search({
+                view: view
+            });
+
+            // Agregar el widget de búsqueda al mapa
+            view.ui.add(searchWidget, {
+                position: "top-right"
+            });
+
+        });
+    </script>
+</body>
+</html>
